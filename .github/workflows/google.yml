@@ -28,4 +28,4 @@ jobs:
           gcloud components install kubectl
           gcloud config set project ${{ env.PROJECT_ID }}
           gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} --zone ${{ env.GKE_ZONE }}
-          kubectl apply -f nginx.yaml
+          kubectl delete -f nginx.yaml
