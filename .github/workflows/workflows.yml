@@ -1,0 +1,33 @@
+---
+name: my-build-workflow
+on:
+  push:
+    branches:
+      - be
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+      - name: Install gsutil
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          packages: 'gsutil'
+      - name: Download from gcs
+        run: |- 
+          gsutil cp -r gs://admin-tfsate-check/* .
+          ls -a
+      - name: Build image
+        run: docker build -t us-central1-docker.pkg.dev/proj-setup/gcf-artifacts/be .
+  
+      - name: Push image
+        run: |-
+           gcloud auth configure-docker us-central1-docker.pkg.dev 
+           docker push us-central1-docker.pkg.dev/proj-setup/gcf-artifacts/be
+      - name: Deploy to cloud run
+        run:  gcloud run deploy hello '--project' proj-setup '--image' us-central1-docker.pkg.dev/proj-setup/gcf-artifacts/be '--region' us-central1
